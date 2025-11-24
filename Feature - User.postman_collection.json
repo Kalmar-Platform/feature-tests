@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "8d9c5c13-ba43-4f56-b90d-88988377280f",
-		"name": "UserAccess - User",
+		"_postman_id": "4aa5f8a0-6a34-49a6-a4ef-9d585c5a3109",
+		"name": "Feature - User",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "10689816"
 	},
@@ -1201,6 +1201,82 @@
 								}
 							}
 						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/users/{{userId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user by user id after update",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 200.\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Check user details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.email).to.eql(pm.collectionVariables.get('email'));\r",
+									"    pm.expect(jsonData.firstName).to.eql(pm.collectionVariables.get('firstName') + '_UP');\r",
+									"    pm.expect(jsonData.lastName).to.eql(pm.collectionVariables.get('lastName') + '_UP');\r",
+									"    pm.expect(jsonData.userId).to.eql(pm.collectionVariables.get('userId'));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{BASE_URL}}/api/v1/users/{{userId}}",
 							"host": [
