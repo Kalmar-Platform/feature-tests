@@ -1,0 +1,1399 @@
+{
+	"info": {
+		"_postman_id": "e6235ffa-0efc-4832-8974-ac7a58a195ff",
+		"name": "Feature - Role",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10689816"
+	},
+	"item": [
+		{
+			"name": "Access token for user [2]",
+			"item": [
+				{
+					"name": "Access Token for User [Mock with AWS]",
+					"item": [
+						{
+							"name": "Use Mock with AWS?",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"if (pm.environment.name.includes(\"local\") || pm.environment.name.includes(\"int\")) {",
+											"    console.log(\"Mock with AWS is used in environment \" + pm.environment.name);",
+											"    // When using setNextRequest make sure you don't have to requests with the same name!",
+											"    // Request ID can also ne used.",
+											"    // See https://learning.postman.com/docs/collections/running-collections/building-workflows/",
+											"    postman.setNextRequest(\"Access Token for User [2] - Authorize\");",
+											"} else {",
+											"    postman.setNextRequest(\"Access Token for User [2] - Use Visma Connect?\");",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/actuator/health",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"actuator",
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Access Token for User [2] - Authorize",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// clear cookies\r",
+											"const cookieJar = pm.cookies.jar();\r",
+											"\r",
+											"cookieJar.clear(pm.environment.get(\"VISMA_CONNECT_URL\") + pm.environment.get(\"AUTHORIZE_PATH\"), function (error) {\r",
+											"    // To whitelist a domain so that cookies can be programmatically accessed, \r",
+											"    // click the Cookies link under the Send button and open the MANAGE COOKIES modal.\r",
+											"    // Click on Whitelist Domains from bottom left and enter the list of domains needed to be whitelisted.\r",
+											"    if (error) {\r",
+											"        console.log(error);\r",
+											"    }\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// asserts\r",
+											"pm.test(\"Response status code is ok.\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// Only used with the Visma Connect mock done with AWS Cognito.\r",
+											"const cookieJar = pm.cookies.jar();\r",
+											"const xsrfToken = cookieJar.get(pm.environment.get(\"VISMA_CONNECT_URL\") \r",
+											"    + pm.environment.get(\"LOGIN_URL\"), 'XSRF-TOKEN', function(error, cookie) {\r",
+											"        if (error) {\r",
+											"            console.log(error);\r",
+											"        } else {\r",
+											"            pm.collectionVariables.set('xsrfToken', cookie);\r",
+											"        }\r",
+											"});\r",
+											"pm.collectionVariables.set('xsrfToken', xsrfToken);\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}{{AUTHORIZE_PATH}}?client_id={{CLIENT_ID_ADMIN_UI}}&redirect_uri={{REDIRECT_URI}}&response_type=code&scope={{ADMIN_CUSTOMER_UI_SCOPES}}&state=test_scope&response_mode=form_post",
+									"host": [
+										"{{VISMA_CONNECT_URL}}{{AUTHORIZE_PATH}}"
+									],
+									"query": [
+										{
+											"key": "client_id",
+											"value": "{{CLIENT_ID_ADMIN_UI}}"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "{{REDIRECT_URI}}"
+										},
+										{
+											"key": "response_type",
+											"value": "code"
+										},
+										{
+											"key": "scope",
+											"value": "{{ADMIN_CUSTOMER_UI_SCOPES}}"
+										},
+										{
+											"key": "state",
+											"value": "test_scope"
+										},
+										{
+											"key": "response_mode",
+											"value": "form_post"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Successful status code\", function(){",
+											"    pm.expect(pm.response.code).to.eq(302);",
+											"});",
+											"pm.test(\"Has Location header with authorization code\", function(){",
+											"    pm.response.to.have.header(\"Location\");",
+											"    var location = pm.response.headers.get(\"Location\");",
+											"    pm.expect(location.startsWith(pm.environment.get(\"REDIRECT_URI\") + \"?code=\")).is.true;",
+											"    pm.collectionVariables.set(\"authorizationCode\", location.substring(location.indexOf(\"?code=\") + \"?code=\".length));",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"followRedirects": false
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "username",
+											"value": "{{USER}}",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "{{PASSWORD}}",
+											"type": "text"
+										},
+										{
+											"key": "_csrf",
+											"value": "{{xsrfToken}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}{{LOGIN_PATH}}?client_id={{CLIENT_ID_ADMIN_UI}}&response_type=code&redirect_uri={{REDIRECT_URI}}&scope={{ADMIN_CUSTOMER_UI_SCOPES}}",
+									"host": [
+										"{{VISMA_CONNECT_URL}}{{LOGIN_PATH}}"
+									],
+									"query": [
+										{
+											"key": "client_id",
+											"value": "{{CLIENT_ID_ADMIN_UI}}"
+										},
+										{
+											"key": "response_type",
+											"value": "code"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "{{REDIRECT_URI}}"
+										},
+										{
+											"key": "scope",
+											"value": "{{ADMIN_CUSTOMER_UI_SCOPES}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var json = pm.response.json();",
+											"",
+											"// asserts",
+											"pm.test(\"Response status code is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"pm.test(\"Response contains access_token\", function () {",
+											"    pm.expect(json.access_token).not.equal(null);",
+											"});",
+											"",
+											"// get request verification token value",
+											"pm.collectionVariables.set(\"accessTokenForUser\", json.access_token);",
+											"",
+											"// get request verification token value",
+											"pm.collectionVariables.set(\"idTokenForUser\", json.id_token);",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "client_id",
+											"value": "{{CLIENT_ID_ADMIN_UI}}",
+											"type": "text"
+										},
+										{
+											"key": "grant_type",
+											"value": "authorization_code",
+											"type": "text"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "{{REDIRECT_URI}}",
+											"type": "text"
+										},
+										{
+											"key": "code",
+											"value": "{{authorizationCode}}",
+											"type": "text"
+										},
+										{
+											"key": "tenant_hint",
+											"value": "{{CUSTOMER_TENANT_ID}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}{{TOKEN_PATH}}",
+									"host": [
+										"{{VISMA_CONNECT_URL}}{{TOKEN_PATH}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Access Token for User [Visma Connect]",
+					"item": [
+						{
+							"name": "Access Token for User [2] - Use Visma Connect?",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"if (pm.environment.name.includes(\"local\") || pm.environment.name.includes(\"int\")) {",
+											"    // When using setNextRequest make sure you don't have to requests with the same name!",
+											"    // Request ID can also ne used.",
+											"    // See https://learning.postman.com/docs/collections/running-collections/building-workflows/    ",
+											"    postman.setNextRequest(\"Access Token for User [2] - End Access Token for User\");",
+											"} else {",
+											"    console.log(\"Visma Connect is used in environment \" + pm.environment.name);",
+											"    postman.setNextRequest(\"Access Token for User [2] - Get login screen\");",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/actuator/health",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"actuator",
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Access Token for User [2] - Get login screen",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// clear cookies\r",
+											"const jar = pm.cookies.jar();\r",
+											"\r",
+											"var cookieUrl = \".\" + pm.environment.get(\"VISMA_CONNECT_URL\").replace(\"https://\", \"\");\r",
+											"\r",
+											"jar.clear(cookieUrl, function (error) {\r",
+											"    // To whitelist a domain so that cookies can be programmatically accessed, click the Cookies link under the Send button and open the MANAGE COOKIES modal.\r",
+											"    // Click on Whitelist Domains from bottom left and enter the list of domains needed to be whitelisted.\r",
+											"    console.log(error);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// asserts\r",
+											"pm.test(\"Response status code is ok.\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// get request verification token value\r",
+											"var html = cheerio(responseBody);\r",
+											"pm.collectionVariables.set(\"requestVerificationToken\", html.find('input[name=__RequestVerificationToken]').attr('value'));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}{{LOGIN_URL}}?client_id={{CLIENT_ID_ADMIN_UI}}&redirect_uri={{REDIRECT_URI}}&response_type=code&scope={{ADMIN_CUSTOMER_UI_SCOPES}}&state=test_scope&response_mode=form_post&tenant_hint={{CUSTOMER_TENANT_ID}}",
+									"host": [
+										"{{VISMA_CONNECT_URL}}{{LOGIN_URL}}"
+									],
+									"query": [
+										{
+											"key": "client_id",
+											"value": "{{CLIENT_ID_ADMIN_UI}}"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "{{REDIRECT_URI}}"
+										},
+										{
+											"key": "response_type",
+											"value": "code"
+										},
+										{
+											"key": "scope",
+											"value": "{{ADMIN_CUSTOMER_UI_SCOPES}}"
+										},
+										{
+											"key": "state",
+											"value": "test_scope"
+										},
+										{
+											"key": "response_mode",
+											"value": "form_post"
+										},
+										{
+											"key": "tenant_hint",
+											"value": "{{CUSTOMER_TENANT_ID}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Post user login",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Successful status code\", function(){",
+											"    pm.expect(pm.response.code).to.eq(302);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"followRedirects": false
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "Username",
+											"value": "{{USER}}",
+											"type": "text"
+										},
+										{
+											"key": "Password",
+											"value": "{{PASSWORD}}",
+											"type": "text"
+										},
+										{
+											"key": "__RequestVerificationToken",
+											"value": "{{requestVerificationToken}}",
+											"type": "text"
+										},
+										{
+											"key": "ClientId",
+											"value": "{{CLIENT_ID_ADMIN_UI}}",
+											"type": "text"
+										},
+										{
+											"key": "ReturnUrl",
+											"value": "{{REDIRECT_URI}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}",
+									"host": [
+										"{{VISMA_CONNECT_URL}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Post user password",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Successful status code\", function(){",
+											"    pm.expect(pm.response.code).to.eq(302);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"followRedirects": false
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "Username",
+											"value": "{{USER}}",
+											"type": "text"
+										},
+										{
+											"key": "Password",
+											"value": "{{PASSWORD}}",
+											"type": "text"
+										},
+										{
+											"key": "__RequestVerificationToken",
+											"value": "{{requestVerificationToken}}",
+											"type": "text"
+										},
+										{
+											"key": "ClientId",
+											"value": "{{CLIENT_ID_ADMIN_UI}}",
+											"type": "text"
+										},
+										{
+											"key": "ReturnUrl",
+											"value": "{{REDIRECT_URI}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}/password",
+									"host": [
+										"{{VISMA_CONNECT_URL}}"
+									],
+									"path": [
+										"password"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get authorize request",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var html = cheerio(responseBody);",
+											"",
+											"// asserts",
+											"pm.test(\"Response status code is redirect\", function () {",
+											"    pm.response.to.have.status(302);",
+											"});",
+											"",
+											"// In case the Location header starts with \"/recovery\", it means that Visma Connect is asking the user to",
+											"// add account recovery options.",
+											"// You need to log in with the user account, from a web browser, and to dismiss the Recovery popup.",
+											"// We are logging the Location header to leave an indication if this scenario appeared.",
+											"// We believe it happens every 3 months.",
+											"console.log(pm.response.headers.get('Location'));",
+											"",
+											"// get authorization code value",
+											"parser = require('postman-collection').Url.parse",
+											"pm.collectionVariables.set(\"authorizationCode\", parser(pm.response.headers.get('Location')).query.find(a => a.key === \"code\")[\"value\"]);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"var codeVerifier = getVerifier();\r",
+											"\r",
+											"console.log(\"Code verifier :\" + codeVerifier);\r",
+											"console.log(\"Code challange :\" + getCodeChallange(codeVerifier));\r",
+											"\r",
+											"pm.collectionVariables.set(\"codeVerifier\", codeVerifier );\r",
+											"pm.collectionVariables.set(\"codeChallange\", getCodeChallange(codeVerifier));\r",
+											"\r",
+											"\r",
+											" function getVerifier(){\r",
+											"    const value = CryptoJS.lib.WordArray.random(32);\r",
+											"    return getBase64URLEncode(value);\r",
+											" }\r",
+											"\r",
+											" function getCodeChallange(value){\r",
+											"   return getBase64URLEncode(CryptoJS.SHA256(value));\r",
+											" }\r",
+											"\r",
+											" function getBase64URLEncode(value){\r",
+											"    return CryptoJS.enc.Base64.stringify(value)\r",
+											"      .replace(/\\+/g, '-')\r",
+											"      .replace(/\\//g, '_')\r",
+											"      .replace(/=/g, '');\r",
+											"  }"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"followRedirects": false
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}{{AUTHORIZE_PATH}}?redirect_uri={{REDIRECT_URI}}&client_id={{CLIENT_ID_ADMIN_UI}}&response_type=code&scope={{ADMIN_CUSTOMER_UI_SCOPES}}&state=teststate&code_challenge={{codeChallange}}&code_challenge_method=S256&response_mode=query&tenant_hint={{CUSTOMER_TENANT_ID}}",
+									"host": [
+										"{{VISMA_CONNECT_URL}}{{AUTHORIZE_PATH}}"
+									],
+									"query": [
+										{
+											"key": "redirect_uri",
+											"value": "{{REDIRECT_URI}}"
+										},
+										{
+											"key": "client_id",
+											"value": "{{CLIENT_ID_ADMIN_UI}}"
+										},
+										{
+											"key": "response_type",
+											"value": "code"
+										},
+										{
+											"key": "scope",
+											"value": "{{ADMIN_CUSTOMER_UI_SCOPES}}"
+										},
+										{
+											"key": "state",
+											"value": "teststate"
+										},
+										{
+											"key": "code_challenge",
+											"value": "{{codeChallange}}"
+										},
+										{
+											"key": "code_challenge_method",
+											"value": "S256"
+										},
+										{
+											"key": "response_mode",
+											"value": "query"
+										},
+										{
+											"key": "tenant_hint",
+											"value": "{{CUSTOMER_TENANT_ID}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Post token request",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var json = pm.response.json();",
+											"",
+											"// asserts",
+											"pm.test(\"Response status code is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"pm.test(\"Response contains access_token\", function () {",
+											"    pm.expect(json.access_token).not.equal(null);",
+											"});",
+											"",
+											"// get request verification token value",
+											"pm.collectionVariables.set(\"accessTokenForUser\", json.access_token);",
+											"",
+											"// get request verification token value",
+											"pm.collectionVariables.set(\"idTokenForUser\", json.id_token);",
+											"",
+											"const jar = pm.cookies.jar();",
+											"jar.clear(pm.request.url, function (error) {",
+											"    console.log(error);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "client_id",
+											"value": "{{CLIENT_ID_ADMIN_UI}}",
+											"type": "text"
+										},
+										{
+											"key": "grant_type",
+											"value": "authorization_code",
+											"type": "text"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "{{REDIRECT_URI}}",
+											"type": "text"
+										},
+										{
+											"key": "code",
+											"value": "{{authorizationCode}}",
+											"type": "text"
+										},
+										{
+											"key": "code_verifier",
+											"value": "{{codeVerifier}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{VISMA_CONNECT_URL}}{{TOKEN_PATH}}",
+									"host": [
+										"{{VISMA_CONNECT_URL}}{{TOKEN_PATH}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Access Token for User [2] - End Access Token for User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/actuator/health",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Role crud operations",
+			"item": [
+				{
+					"name": "Create role",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// get a random value\r",
+									"const RandomDataGenerator = Date.now()\r",
+									"pm.collectionVariables.set(\"randomDataGenerator\", RandomDataGenerator);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//save connectUserId and userEmail value from response body to collection variables\r",
+									"var jsonData = pm.response.json();\r",
+									"var roleId = jsonData.roleId;\r",
+									"var name = jsonData.name;\r",
+									"var invariantKey = jsonData.invariantKey;\r",
+									"var description = jsonData.description;\r",
+									"pm.collectionVariables.set(\"roleId\", roleId);\r",
+									"pm.collectionVariables.set(\"roleName\", name);\r",
+									"pm.collectionVariables.set(\"roleInvariantKey\", invariantKey);\r",
+									"pm.collectionVariables.set(\"roleDescription\", description);\r",
+									"\r",
+									"\r",
+									"//1.\r",
+									"pm.test(\"Status code is 201.\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include('roleId');\r",
+									"    pm.expect(pm.response.text()).to.include('name');\r",
+									"    pm.expect(pm.response.text()).to.include('invariantKey');\r",
+									"    pm.expect(pm.response.text()).to.include('description');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"role+{{randomDataGenerator}}\",\r\n    \"invariantKey\":\"roleInvariantKey+{{randomDataGenerator}}\",\r\n    \"description\":\"description+{{randomDataGenerator}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/roles",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create role again",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 409.\", function () {\r",
+									"    pm.response.to.have.status(409);\r",
+									"});\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Check error details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.code).to.eql(\"Role\");\r",
+									"    pm.expect(jsonData.message).to.include('Role with invariantKey: ' + pm.collectionVariables.get('invariantKey') +' already exists.');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"role+{{randomDataGenerator}}\",\r\n    \"invariantKey\":\"roleInvariantKey+{{randomDataGenerator}}\",\r\n    \"description\":\"description+{{randomDataGenerator}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/roles",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get role by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 200.\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Check role details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.name).to.be.eq(pm.collectionVariables.get(\"roleName\"));\r",
+									"    pm.expect(jsonData.invariantKey).to.be.eq(pm.collectionVariables.get(\"roleInvariantKey\"));\r",
+									"    pm.expect(jsonData.description).to.be.eq(pm.collectionVariables.get(\"roleDescription\"));\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"role+{{randomDataGenerator}}\",\r\n    \"invariantKey\":\"roleInvariantKey+{{randomDataGenerator}}\",\r\n    \"description\":\"description+{{randomDataGenerator}}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/roles/{{roleId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"roles",
+								"{{roleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update role",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 200.\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"role+{{randomDataGenerator}}_UP\",\r\n    \"invariantKey\":\"roleInvariantKey+{{randomDataGenerator}}\",\r\n    \"description\":\"description+{{randomDataGenerator}}_UP\"\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/roles/{{roleId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"roles",
+								"{{roleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get role by id after update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 200.\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Check role details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.name).to.be.eq(pm.collectionVariables.get(\"roleName\")+ '_UP');\r",
+									"    pm.expect(jsonData.invariantKey).to.be.eq(pm.collectionVariables.get(\"roleInvariantKey\"));\r",
+									"    pm.expect(jsonData.description).to.be.eq(pm.collectionVariables.get(\"roleDescription\") + '_UP');\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"role+{{randomDataGenerator}}\",\r\n    \"invariantKey\":\"roleInvariantKey+{{randomDataGenerator}}\",\r\n    \"description\":\"description+{{randomDataGenerator}}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/roles/{{roleId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"roles",
+								"{{roleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete role",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 204.\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/roles/{{roleId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"roles",
+								"{{roleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete role again",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 404.\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});\r",
+									"\r",
+									"//1.\r",
+									"pm.test(\"Check erro details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.code).to.eql(\"Role\");\r",
+									"    pm.expect(jsonData.message).to.eql(\"Role not found with id: \" + pm.collectionVariables.get(\"roleId\"));\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/roles/{{roleId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"roles",
+								"{{roleId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "requestVerificationToken",
+			"value": ""
+		},
+		{
+			"key": "codeVerifier",
+			"value": ""
+		},
+		{
+			"key": "codeChallange",
+			"value": ""
+		},
+		{
+			"key": "authorizationCode",
+			"value": ""
+		},
+		{
+			"key": "accessTokenForUser",
+			"value": ""
+		},
+		{
+			"key": "idTokenForUser",
+			"value": ""
+		},
+		{
+			"key": "randomDataGenerator",
+			"value": ""
+		},
+		{
+			"key": "roleId",
+			"value": ""
+		},
+		{
+			"key": "name",
+			"value": ""
+		},
+		{
+			"key": "invariantKey",
+			"value": ""
+		},
+		{
+			"key": "description",
+			"value": ""
+		},
+		{
+			"key": "roleName",
+			"value": ""
+		},
+		{
+			"key": "roleInvariantKey",
+			"value": ""
+		},
+		{
+			"key": "roleDescription",
+			"value": ""
+		}
+	]
+}
