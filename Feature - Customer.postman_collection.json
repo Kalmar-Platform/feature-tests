@@ -928,7 +928,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"idCountry\":\"1565cb0b-63c9-11f0-a7c8-ea25da55aba6\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\"\r\n\r\n}",
+							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"countryCode\":\"{{COUNTRY_CODE_NO}}\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\"\r\n\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1003,7 +1003,82 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"idCountry\":\"1565cb0b-63c9-11f0-a7c8-ea25da55aba6\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{$guid}}\"\r\n\r\n}",
+							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"countryCode\":\"{{COUNTRY_CODE_NO}}\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{$guid}}\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/customers",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new customer wrong country code",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// get a random value\r",
+									"const RandomDataGenerator = Date.now()\r",
+									"pm.collectionVariables.set(\"randomDataGenerator\", RandomDataGenerator);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 404.\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Check error details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.code).to.eql(\"Country\");\r",
+									"    pm.expect(jsonData.message).to.be.eq('Country not found with code: ' + pm.environment.get('COUNTRY_CODE_UNKNOWN'));\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"countryCode\":\"{{COUNTRY_CODE_UNKNOWN}}\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{DISTRIBUTOR_ID}}\"\r\n\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1081,7 +1156,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"idCountry\":\"1565cb0b-63c9-11f0-a7c8-ea25da55aba6\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{DISTRIBUTOR_ID}}\"\r\n\r\n}",
+							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"countryCode\":\"{{COUNTRY_CODE_NO}}\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{DISTRIBUTOR_ID}}\"\r\n\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1123,6 +1198,7 @@
 									"    pm.expect(jsonData.name).to.eql(\"Customer_\"+ pm.collectionVariables.get('randomDataGenerator'));\r",
 									"    pm.expect(jsonData.idContextParent).to.be.eq(pm.environment.get('DISTRIBUTOR_ID'));\r",
 									"    pm.expect(jsonData.organizationNumber).to.be.eql(pm.collectionVariables.get('randomDataGenerator') + \"\");\r",
+									"    pm.expect(jsonData.countryCode).to.be.eql(pm.environment.get('COUNTRY_CODE_NO') + \"\");\r",
 									"});"
 								],
 								"type": "text/javascript",
@@ -1187,19 +1263,16 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"var idContext = pm.response.json().idContext;\r",
-									"pm.collectionVariables.set(\"idContext\", idContext);\r",
-									"\r",
 									"//1.\r",
-									"pm.test(\"Status code is 201.\", function () {\r",
-									"    pm.response.to.have.status(201);\r",
+									"pm.test(\"Status code is 409.\", function () {\r",
+									"    pm.response.to.have.status(409);\r",
 									"});\r",
 									"\r",
 									"//2.\r",
-									"pm.test(\"Check created customer details\", function () {\r",
+									"pm.test(\"Check error details\", function () {\r",
 									"    var jsonData = pm.response.json();\r",
-									"    pm.expect(jsonData.name).to.eql(\"Customer_\"+ pm.collectionVariables.get('randomDataGenerator'));\r",
-									"    pm.expect(jsonData.idContextParent).to.be.eq(pm.environment.get('DISTRIBUTOR_ID'));\r",
+									"    pm.expect(jsonData.code).to.eql(\"Customer\");\r",
+									"    pm.expect(jsonData.message).to.be.eq('Customer already exists with id: ' + pm.collectionVariables.get(\"idContext\"));\r",
 									"});"
 								],
 								"type": "text/javascript",
@@ -1223,7 +1296,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"idContext\":\"{{idContext}}\",\r\n    \"idCountry\":\"1565cb0b-63c9-11f0-a7c8-ea25da55aba6\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{DISTRIBUTOR_ID}}\"\r\n\r\n}",
+							"raw": "{\r\n    \"idContext\":\"{{idContext}}\",\r\n    \"countryCode\":\"{{COUNTRY_CODE_NO}}\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{DISTRIBUTOR_ID}}\"\r\n\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1334,6 +1407,231 @@
 									"const RandomDataGenerator = Date.now()\r",
 									"pm.collectionVariables.set(\"randomDataGenerator\", RandomDataGenerator);\r",
 									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 204.\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"idCountry\":\"1565cb0b-63c9-11f0-a7c8-ea25da55aba6\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/customers/{{idContext}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{idContext}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new customer no country specified",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// get a random value\r",
+									"const RandomDataGenerator = Date.now()\r",
+									"pm.collectionVariables.set(\"randomDataGenerator\", RandomDataGenerator);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var idContext = pm.response.json().idContext;\r",
+									"pm.collectionVariables.set(\"idContext\", idContext);\r",
+									"\r",
+									"//1.\r",
+									"pm.test(\"Status code is 201.\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Check created customer details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.name).to.eql(\"Customer_\"+ pm.collectionVariables.get('randomDataGenerator'));\r",
+									"    pm.expect(jsonData.idContextParent).to.be.eq(pm.environment.get('DISTRIBUTOR_ID'));\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{DISTRIBUTOR_ID}}\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/customers",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get customer no country code specified",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var idContext = pm.response.json().idContext;\r",
+									"pm.collectionVariables.set(\"idContext\", idContext);\r",
+									"\r",
+									"//1.\r",
+									"pm.test(\"Status code is 200.\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"//2.\r",
+									"pm.test(\"Check created customer details\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.name).to.eql(\"Customer_\"+ pm.collectionVariables.get('randomDataGenerator'));\r",
+									"    pm.expect(jsonData.idContextParent).to.be.eq(pm.environment.get('DISTRIBUTOR_ID'));\r",
+									"    pm.expect(jsonData.organizationNumber).to.be.eql(pm.collectionVariables.get('randomDataGenerator') + \"\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTokenForUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"idContext\":\"{{$guid}}\",\r\n    \"idCountry\":\"1565cb0b-63c9-11f0-a7c8-ea25da55aba6\",\r\n    \"organizationNumber\":\"{{randomDataGenerator}}\",\r\n    \"name\":\"Customer_{{randomDataGenerator}}\",\r\n    \"idContextParent\": \"{{DISTRIBUTOR_ID}}\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/customers/{{idContext}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{idContext}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete customer no country code specified",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// get a random value\r",
+									"const RandomDataGenerator = Date.now()\r",
+									"pm.collectionVariables.set(\"randomDataGenerator\", RandomDataGenerator);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//1.\r",
+									"pm.test(\"Status code is 204.\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {},
