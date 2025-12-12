@@ -21,8 +21,8 @@
 										"exec": [
 											"if (pm.environment.name.includes(\"local\") || pm.environment.name.includes(\"int\")) {",
 											"    console.log(\"Mock with AWS is used in environment \" + pm.environment.name);",
-											"    // When using setNextRequest make sure you don't have to requests with the same name!",
-											"    // Request ID can also ne used.",
+											"    // When using setNextRequest make sure you don't have two requests with the same name!",
+											"    // Request ID can also be used.",
 											"    // See https://learning.postman.com/docs/collections/running-collections/building-workflows/",
 											"    postman.setNextRequest(\"Access Token for User [2] - Authorize\");",
 											"} else {",
@@ -331,7 +331,7 @@
 										"exec": [
 											"if (pm.environment.name.includes(\"local\") || pm.environment.name.includes(\"int\")) {",
 											"    // When using setNextRequest make sure you don't have to requests with the same name!",
-											"    // Request ID can also ne used.",
+											"    // Request ID can also be used.",
 											"    // See https://learning.postman.com/docs/collections/running-collections/building-workflows/    ",
 											"    postman.setNextRequest(\"Access Token for User [2] - End Access Token for User\");",
 											"} else {",
@@ -644,10 +644,10 @@
 											"var codeVerifier = getVerifier();\r",
 											"\r",
 											"console.log(\"Code verifier :\" + codeVerifier);\r",
-											"console.log(\"Code challange :\" + getCodeChallange(codeVerifier));\r",
+											"console.log(\"Code challange :\" + getCodeChallenge(codeVerifier));\r",
 											"\r",
 											"pm.collectionVariables.set(\"codeVerifier\", codeVerifier );\r",
-											"pm.collectionVariables.set(\"codeChallange\", getCodeChallange(codeVerifier));\r",
+											"pm.collectionVariables.set(\"codeChallenge\", getCodeChallenge(codeVerifier));\r",
 											"\r",
 											"\r",
 											" function getVerifier(){\r",
@@ -655,7 +655,7 @@
 											"    return getBase64URLEncode(value);\r",
 											" }\r",
 											"\r",
-											" function getCodeChallange(value){\r",
+											" function getCodeChallenge(value){\r",
 											"   return getBase64URLEncode(CryptoJS.SHA256(value));\r",
 											" }\r",
 											"\r",
@@ -680,7 +680,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{VISMA_CONNECT_URL}}{{AUTHORIZE_PATH}}?redirect_uri={{REDIRECT_URI}}&client_id={{CLIENT_ID_ADMIN_UI}}&response_type=code&scope={{ADMIN_CUSTOMER_UI_SCOPES}}&state=teststate&code_challenge={{codeChallange}}&code_challenge_method=S256&response_mode=query&tenant_hint={{CUSTOMER_TENANT_ID}}",
+									"raw": "{{VISMA_CONNECT_URL}}{{AUTHORIZE_PATH}}?redirect_uri={{REDIRECT_URI}}&client_id={{CLIENT_ID_ADMIN_UI}}&response_type=code&scope={{ADMIN_CUSTOMER_UI_SCOPES}}&state=teststate&code_challenge={{codeChallenge}}&code_challenge_method=S256&response_mode=query&tenant_hint={{CUSTOMER_TENANT_ID}}",
 									"host": [
 										"{{VISMA_CONNECT_URL}}{{AUTHORIZE_PATH}}"
 									],
@@ -707,7 +707,7 @@
 										},
 										{
 											"key": "code_challenge",
-											"value": "{{codeChallange}}"
+											"value": "{{codeChallenge}}"
 										},
 										{
 											"key": "code_challenge_method",
@@ -1363,7 +1363,7 @@
 					"response": []
 				},
 				{
-					"name": "Get company after updat",
+					"name": "Get company after update",
 					"event": [
 						{
 							"listen": "test",
@@ -1505,7 +1505,7 @@
 			"value": ""
 		},
 		{
-			"key": "codeChallange",
+			"key": "codeChallenge",
 			"value": ""
 		},
 		{
